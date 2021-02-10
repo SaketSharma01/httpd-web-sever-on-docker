@@ -1,0 +1,37 @@
+- hosts: localhost
+  gather_facts: false
+  tasks:
+     - name: configuring docker
+       yum_repository:
+                 name: "docker"
+                 description: "docker repo"
+                 baseurl: "https://download.docker.com/linux/centos/7/x86_64/stable/"
+                 gpgcheck: no
+     - name: intalling docker
+       command: "yum install docker-ce --nobest -y"
+       changed_when: false
+     - name: starting docker
+       service:
+              name: docker
+              state: started
+              enabled: yes
+      
+     - name: 
+              command: "pip3 install docker"
+      
+     - docker_image:
+              name: "httpd"
+              source: pull
+     - docker_container:
+              name: newCont
+              state: started
+              image: "httpd"
+              exposed_ports: "80"
+              ports: "8089:80"
+              volumes: 
+                  - /var/www/html:/usr/local/apache2/htdocs/
+
+       register: dkr
+     - debug:
+             var: dkr.container.Networksetting.IPAddress 
+
