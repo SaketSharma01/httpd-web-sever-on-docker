@@ -1,0 +1,75 @@
+- hosts: all 
+  tasks:
+     - name: creating /dvd directory
+       file:
+               state: directory
+               path: "/dvd"
+
+     - name: mounting /dvd directory on /dev/cdrom
+       mount:
+               src: "/dev/cdrom"
+               path: "/dvd"
+               state: mounted
+               fstype: "iso9660"
+
+     - name: AppStream repo for yum
+       yum_repository:
+               name: "dvd1"
+               description: "AppStream yum repo"
+               baseurl: "file:///dvd/AppStream"
+               gpgcheck: no
+     
+     - name: BaseOS repo for yum
+       yum_repository:
+               name: "dvd2"
+               description: "BaseOS yum repo"
+               baseurl: "file:///dvd/BaseOS"
+               gpgcheck: no
+
+     - name: configuring docker yum repo
+       yum_repository:
+                 name: "docker"
+                 description: "docker repo"
+                 baseurl: "https://download.docker.com/linux/centos/7/x86_64/stable/"
+                 gpgcheck: no
+
+     - name: intalling docker
+       shell: "yum install docker-ce --nobest -y"
+
+     - name: starting docker
+       service:
+              name: "docker"
+              state: started
+              enabled: yes
+      
+     - name: Installing Docker SDK for Python 
+       pip:
+               name: "Docker"
+      
+     - name: Pulling httpd server image
+       docker_image:
+              name: "httpd"
+              source: pull
+
+     - docker_container:
+              name: "newCont"
+              state: started
+              image: "httpd"
+              exposed_ports: "80"
+              ports: "8090:80"
+              volumes: 
+                   - "/var/www/html:/usr/local/apache2/htdocs/:ro"
+
+     - name: Copying html code to /var/www/html directory
+       copy:
+               src: "index.html"
+               dest: "/var/www/html"
+
+     - name: Permit traffic in default zone on port 8090/tcp 
+       firewalld:
+               port: "8090/tcp"
+               state: enabled
+               permanent: yes
+               immediate: yes
+   
+
