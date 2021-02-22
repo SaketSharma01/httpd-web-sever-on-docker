@@ -1,4 +1,5 @@
-- hosts: all 
+- name: configuring webserver on top of docker container
+  hosts: all 
   tasks:
      - name: creating /dvd directory
        file:
@@ -14,6 +15,7 @@
 
      - name: AppStream repo for yum
        yum_repository:
+               file: "yum"
                name: "dvd1"
                description: "AppStream yum repo"
                baseurl: "file:///dvd/AppStream"
@@ -21,6 +23,7 @@
      
      - name: BaseOS repo for yum
        yum_repository:
+               file: "yum"
                name: "dvd2"
                description: "BaseOS yum repo"
                baseurl: "file:///dvd/BaseOS"
@@ -28,6 +31,7 @@
 
      - name: configuring docker yum repo
        yum_repository:
+                 file: "docker"
                  name: "docker"
                  description: "docker repo"
                  baseurl: "https://download.docker.com/linux/centos/7/x86_64/stable/"
@@ -41,7 +45,11 @@
               name: "docker"
               state: started
               enabled: yes
-      
+              
+     - name: install python3-pip
+       yum:
+              name: python3-pip
+              
      - name: Installing Docker SDK for Python 
        pip:
                name: "Docker"
