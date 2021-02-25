@@ -6,7 +6,7 @@
                state: directory
                path: "/dvd"
 
-     - name: mounting /dvd directory on /dev/cdrom
+     - name: mounting /dev/cdrom on /dvd directory
        mount:
                src: "/dev/cdrom"
                path: "/dvd"
