@@ -54,6 +54,7 @@
                state: enabled
                permanent: yes
                immediate: yes
+       ignore_errors: yes
      - debug:
             var: x
 
