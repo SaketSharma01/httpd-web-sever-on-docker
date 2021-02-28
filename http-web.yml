@@ -1,20 +1,6 @@
 - name: "Configuring Apache Web-Server on Docker Container"
   hosts: all
   tasks:
-     - name: configuring docker yum repo
-       yum_repository:
-                 file: "docker"
-                 name: "docker"
-                 description: "docker repo"
-                 baseurl: "https://download.docker.com/linux/centos/7/x86_64/stable/"
-                 gpgcheck: no
-
-     - name: "intalling docker"
-       shell: "yum install docker-ce --nobest -y"
-       async: 500
-       poll: 0
-       register: x
-
      - name: creating /dvd directory
        file:
                state: directory
@@ -39,31 +25,19 @@
        yum_repository:
                file: "yum"
                name: "dvd2"
-               description: "BaseOS yum repo"
                baseurl: "file:///dvd/BaseOS"
-               gpgcheck: no    
+               gpgcheck: no
+               
+    - name: configuring docker yum repo
+       yum_repository:
+                 file: "docker"
+                 name: "docker"
+                 description: "docker repo"
+                 baseurl: "https://download.docker.com/linux/centos/7/x86_64/stable/"
+                 gpgcheck: no
 
-     - name: Copying html code to /var/www/html directory
-       copy:
-               src: "index.html"
-               dest: "/var/www/html"
-
-     - name: Permit traffic in default zone on port 8090/tcp 
-       firewalld:
-               port: "8090/tcp"
-               state: enabled
-               permanent: yes
-               immediate: yes
-       ignore_errors: yes
-     - debug:
-            var: x
-
-     - async_status:
-            jid: "{{ x.ansible_job_id }}"
-       register: status
-       until: status.finished
-       retries: 100
-       delay: 10 
+     - name: "intalling docker"
+       shell: "yum install docker-ce --nobest -y" 
                
      - name: install pip3
        yum:
@@ -93,7 +67,20 @@
               volumes:
                    - "/var/www/html:/usr/local/apache2/htdocs/:ro"
 
-     - name: Get infos on container
+     - name: Copying html code to /var/www/html directory
+       copy:
+               src: "index.html"
+               dest: "/var/www/html"
+
+     - name: Permit traffic in default zone on port 8090/tcp 
+       firewalld:
+               port: "8090/tcp"
+               state: enabled
+               permanent: yes
+               immediate: yes
+       ignore_errors: yes
+       
+    - name: Get infos on container
        docker_container_info:
                name: newCont
        register: result
