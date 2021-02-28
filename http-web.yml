@@ -62,7 +62,7 @@
             jid: "{{ x.ansible_job_id }}"
        register: status
        until: status.finished
-       retries: 60
+       retries: 100
        delay: 10 
                
      - name: install pip3
