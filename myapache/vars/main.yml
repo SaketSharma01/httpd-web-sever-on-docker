@@ -1,0 +1,5 @@
+---
+# vars file for mypack
+directory: /software_DVD
+published_port: 8089
+

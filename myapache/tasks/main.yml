@@ -1,0 +1,90 @@
+---
+- name: check if  directory is present
+  stat:
+          path: "{{ directory }}"
+  register: stats 
+- name: creating  directory if it does not exist
+  file:
+       state: directory
+       path: "{{ directory }}"
+       mode: "0755"
+  when: stats.exists is not true
+
+- name: mounting directory on /dev/cdrom
+  mount:
+       src: "/dev/cdrom"
+       path: "{{ directory }}"
+       state: mounted
+       fstype: "iso9660"
+
+- name: AppStream repo for yum
+  yum_repository:
+       file: "rhel"
+       name: "dvd1"
+       description: "AppStream yum repo"
+       baseurl: "file:///{{ directory }}/AppStream"
+       gpgcheck: no
+
+- name: BaseOS repo for yum
+  yum_repository:
+       file: "rhel"
+       name: "dvd2"
+       description: "BaseOS yum repo"
+       baseurl: "file:///{{ directory }}/BaseOS"
+       gpgcheck: no    
+- name: configuring docker yum repo
+  yum_repository:
+         name: "docker"
+         description: "docker repo"
+         baseurl: "https://download.docker.com/linux/centos/7/x86_64/stable/"
+         gpgcheck: no
+
+- name: "intalling docker"
+  shell: "yum install docker-ce --nobest -y"
+
+- name: install pip
+  yum:
+       name: "python3-pip"
+
+- name: Installing Docker SDK for Python 
+  pip:
+       name: "Docker"
+
+- name: starting docker
+  service:
+      name: "docker"
+      state: started
+      enabled: yes
+
+- name: Pulling httpd server image
+  docker_image:
+      name: "httpd"
+      source: pull
+
+- docker_container:
+      name: "newContainer"
+      state: started
+      image: "httpd"
+      exposed_ports: "80"
+      ports: "{{ published_port }}:80"
+      volumes:
+           - "/var/www/html:/usr/local/apache2/htdocs/:ro"
+
+- name: Copying html code to /var/www/html directory
+  copy:
+       src: "index.html"
+       dest: "/var/www/html"
+
+- name: check webpage 
+  uri:
+       url: http://{{ ansible_facts["default_ipv4"]["address"] }}:{{ published_port }}
+  register: site
+  ignore_errors: yes
+      
+- name: Permit traffic in default zone on port {{ published_port }}/tcp 
+  ansible.posix.firewalld:
+       port: "{{ published_port }}/tcp"
+       state: enabled
+       permanent: yes
+       immediate: yes
+  when: site.status != 200      
