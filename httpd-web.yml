@@ -1,0 +1,4 @@
+- name: Configuring Apache Web-Server on Docker Container
+  hosts: myweb
+  roles:
+          - myapache
